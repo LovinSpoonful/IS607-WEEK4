@@ -1,0 +1,93 @@
+---
+title: "IS607 - Week 4 - Assignment - Regular Expressions"
+author: "Rob Hodde"
+date: "February 21, 2016"
+output: html_document
+---
+
+```
+Please deliver links to an R Markdown file (in GitHub and rpubs.com) with solutions to problems 3, 7, and 8 from chapter 8 of Automated Data Collection in R.   
+```   
+
+---------
+
+####Problems   
+
+__3. Copy the introductory example.  The vector ```name``` stores the extracted names.__   
+  
+```{r}
+
+library(stringr)
+raw.data <- "555-1239Moe Szyslak(636) 555-0113Burns, C. Montgomery555-6542Rev. Timothy Lovejoy555 8904Ned Flanders636-555-3226Simpson, Homer5553642Dr. Julius Hibbert"
+name <- unlist(str_extract_all(raw.data, "[[:alpha:]., ]{2,}"))  # extract names only.
+
+```
+
+a) Use the tools of this chapter to rearrange the vector so that all elements conform to the standard ```first_name last_name```.
+
+```{r}
+name2 <- sub(" [A-z]{1}\\. "," ",name)  # remove initials
+#Note: The following statement is adapted from 
+#      http://stackoverflow.com/questions/33826650/last-name-first-name-to-first-name-last-name
+name3 <- sub("(\\w+),\\s(\\w+)","\\2 \\1", name2) # switch last,first to first last 
+name4 <- sub("[A-z]{2,3}\\. ","",name3)  # remove titles
+name4
+```
+  
+b) Construct a logical vector indicating whether a character has a title.  
+
+```{r}
+has_title <- str_detect(name3,"[A-z]{2,3}\\. ")
+df <- data.frame(name3,has_title)
+df
+```
+  
+c) Construct a logical vector indicating whether a character has a second name
+
+```{r}
+has_2nd_name <- str_detect(name," [A-z]{1}\\. ")
+df <- data.frame(name,has_2nd_name)
+df
+```
+
+---------
+
+__7. Consider the string ```<title>+++BREAKING NEWS+++</Title>```. We would like to extract the first HTML tab.  To do so we write the regular expression ```<.+>```.  Explain why this fails and correct the expression.__  
+  
+  
+The expression fails because it is greedy and finds the longest possible string that matches the pattern.  We must intentionally limit the returned result to show only the first tab, as shown in the corrected example below.  
+
+```{r}
+
+s <- "<title>+++BREAKING NEWS+++</Title>"
+
+incorrect_html <- str_extract(s,"<.+>")  # wrong way
+incorrect_html
+
+corrected_html <- str_extract(s,"<[A-z]+>")  # right way
+corrected_html
+
+```
+
+---------
+
+__8. Consider the string ```(5-3)^2=5^2-2*5*3+3^2 conforms to the binomial theorem.```  We would like to extract the formula from the string.  To do so we write the regular expression ```[^0-9=+*()]+```.  Explain why this fails and correct the expression.__  
+  
+Many of the characters in the formula are also reserved characters of regular expressions.  Rather than trying to literally name each operand of the formula and all digits, we can simply exclude alpha characters.  
+
+```{r}
+
+s <- "(5-3)^2=5^2-2*5*3+3^2 conforms to the binomial theorem."
+
+incorrect_formula <- str_extract(s,"[^0-9=+*()]+")  # wrong way
+incorrect_formula
+
+correct_formula <- str_trim(str_extract(s,"([^A-z]|\\^)+"))  # (not exactly generalizable!)
+correct_formula
+
+```
+
+
+---------
+
+
